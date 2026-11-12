@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Usuario;
 use App\Models\Empresa;
 
+
 class UsuarioController extends Controller
 {
     /**
@@ -31,18 +32,23 @@ class UsuarioController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'username' => 'required|max:100|unique:usuario,username',
-            'password' => 'required|min:5',
-            'rol' => 'required|in:admin,vendedor,supervisor',
-            'activo' => 'required|boolean',
+       $request->validate([
+        'username' => 'required|unique:usuario',
+        'password' => 'required',
+        'rol' => 'required'
+    ]);
 
-        ]);
+    Usuario::create([
+        'username' => $request->username,
+        'password' => bcrypt($request->password),
+        'rol' => $request->rol,
+        'activo' => $request->activo,
+        'fecha_creacion' => now(),
+        'id_empresa' => $request->id_empresa
+    ]);
 
-        Usuario::create($request->all());
-
-        return redirect ()->route('usuario.index')
-                        ->with('success', 'Cliente creado exitosamente.');
+    return redirect()->route('usuarios.index')
+        ->with('success', 'Usuario creado correctamente'); 
     }
 
     /**
@@ -56,7 +62,7 @@ class UsuarioController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Usuario $usuario)
     {
         $empresas = Empresa::all(['id_empresa', 'nombre']);
         return view('usuarios.edit', compact('usuario', 'empresas'));
@@ -65,31 +71,27 @@ class UsuarioController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Usuario $usuario)
     {
-        $request->validate([
-            'username' => 'required|max:100|unique:usuario,username,' . $usuario->id_usuario . ',id_usuario',
-            'password' => 'required|min:5',
-            'rol' => 'required|in:admin,vendedor,supervisor',
-            'activo' => 'required|boolean',
+        $usuario->update([
+        'username' => $request->username,
+        'rol' => $request->rol,
+        'activo' => $request->activo,
+        'id_empresa' => $request->id_empresa
+    ]);
 
-            'id_empresa' => 'required|exists:empresa,id_empresa'
-        ]);
-
-        $usuario->update($request->all());
-
-        return redirect()->route('usuarios.index')
-                        ->with('success', 'Cliente actualizado exitosamente.');
+    return redirect()->route('usuarios.index')
+        ->with('success', 'Usuario actualizado correctamente');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Usuario $usuario)
     {
-        $usuario->delete();
+         $usuario->delete();
 
-        return redirect()->route('usuarios.index')
-                        ->with('success', 'Cliente eliminado exitosamente.');
+    return redirect()->route('usuarios.index')
+        ->with('success', 'Usuario eliminado correctamente');
     }
 }
